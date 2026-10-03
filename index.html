@@ -341,13 +341,13 @@ function setupStep2Html() {
     <button class="btn btn-k btn-full" onclick="setupExportConfig()">📥 config.jsonを書き出す</button>
 
     <h3>GitHub Pagesで公開する手順</h3>
+    <p class="note">ツール本体（index.html）はこちらで公開済みのものを共有で使うため、あなたが用意するのは<b>config.jsonと評価シートPDF</b>の${1 + setup.files.length}ファイルだけです。</p>
     <ol class="guide-steps">
       <li>GitHubアカウントを作成する（まだ持っていない場合）：<a href="https://github.com/signup" target="_blank">github.com/signup</a></li>
       <li>新しいリポジトリを作成する（Public・READMEなしでよい）：<a href="https://github.com/new" target="_blank">github.com/new</a></li>
       <li>作成したリポジトリの <b>Settings → Pages</b> を開き、Source を「Deploy from a branch」・Branch を「main」「/ (root)」にして保存する</li>
       <li>リポジトリのトップページで <b>Add file → Upload files</b> を開き、次の${1 + setup.files.length}個のファイルをまとめてドラッグ＆ドロップしてコミットする
         <ul>
-          <li>このツールを開いたときに使った index.html ファイル（お使いのPC上にあります）</li>
           <li>config.json（上のボタンで書き出したファイル）</li>
           ${setup.files.map(f => `<li>${esc(f.filename)}（読み込んだ評価シートPDF）</li>`).join('')}
         </ul>
@@ -356,7 +356,7 @@ function setupStep2Html() {
       <li>数十秒〜数分待ってから、Settings → Pages に表示される公開URL（例：<code>https://ユーザー名.github.io/リポジトリ名/</code>）を下に貼り付けてください</li>
     </ol>
 
-    <label>公開後のURL</label>
+    <label>あなたのリポジトリの公開URL（config.json・PDFを置いた場所）</label>
     <input type="url" value="${esc(setup.publishedBaseUrl)}" placeholder="https://ユーザー名.github.io/リポジトリ名/" onchange="setupSetPublishedUrl(this.value)">
 
     ${setup.publishedBaseUrl ? publishedLinkHtml() : ''}
@@ -364,6 +364,10 @@ function setupStep2Html() {
     <button class="btn btn-o btn-full" onclick="setup.step=1; renderSetup()">← 基本情報を修正する</button>
   </div>`;
 }
+
+// ツール本体（index.html）の固定公開先。セットアップ担当者は自分のリポジトリに
+// config.json・PDFの2種類だけを置けばよく、index.htmlの再アップロードは不要（2026-10-03確定）。
+const TOOL_CANONICAL_URL = 'https://onuma-spec.github.io/jimujigyou-hyoka-pdf-direct/index.html';
 
 function setupSetPublishedUrl(v) { setup.publishedBaseUrl = v.trim(); renderSetup(); }
 
@@ -374,7 +378,7 @@ function publishedLinkHtml() {
   }
   if (!base.endsWith('/')) base += '/';
   const configUrl = base + 'config.json';
-  const toolUrl = base + 'index.html?config=' + encodeURIComponent(configUrl);
+  const toolUrl = TOOL_CANONICAL_URL + '?config=' + encodeURIComponent(configUrl);
   return `<div class="preview-box">
     共有用リンク（投票してもらう人に渡すURL）：<br>
     <input type="text" id="published-link-input" value="${esc(toolUrl)}" readonly style="margin:6px 0">
