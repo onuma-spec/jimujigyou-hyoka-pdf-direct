@@ -128,6 +128,19 @@ const pdfjsReady = import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build
   throw err;
 });
 
+// PDFを開く。日本語用の文字コード表（cMap）と標準フォントの場所を必ず指定する。
+// フォントに文字の対応表（ToUnicode）がないPDF（例：西宮市の評価シート）は、cMapがないと
+// 文字を描画できない（罫線と背景色だけが表示される）。src は { data } か { url } を渡す。
+const PDFJS_BASE = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/';
+function openPdf(src) {
+  return pdfjsLib.getDocument({
+    ...src,
+    cMapUrl: PDFJS_BASE + 'cmaps/',
+    cMapPacked: true,
+    standardFontDataUrl: PDFJS_BASE + 'standard_fonts/'
+  }).promise;
+}
+
 // ========================================================================
 // 共通：ヘルパー・バックエンド（既存v3ツール群と同じGAS Web Appに相乗りする）
 // ========================================================================
@@ -455,7 +468,7 @@ async function setupLoadPdfFile(input) {
   const file = input.files[0];
   if (!file) return;
   const buf = await file.arrayBuffer();
-  const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+  const doc = await openPdf({ data: buf });
   const file_id = 'f' + (setup.files.length + 1);
   setup.files.push({ file_id, filename: file.name, doc, numPages: doc.numPages });
   setup.curFileIdx = setup.files.length - 1;
@@ -469,7 +482,7 @@ async function setupReattachFile(idx, input) {
   const file = input.files[0];
   if (!file) return;
   const buf = await file.arrayBuffer();
-  const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+  const doc = await openPdf({ data: buf });
   setup.files[idx].doc = doc;
   setup.files[idx].numPages = doc.numPages;
   setup.files[idx].filename = file.name;
@@ -715,7 +728,7 @@ async function initEvalMode(configParam) {
   const docs = {};
   try {
     for (const f of config.files) {
-      docs[f.file_id] = await pdfjsLib.getDocument(EV_BASE_URL + f.pdf_filename).promise;
+      docs[f.file_id] = await openPdf({ url: EV_BASE_URL + f.pdf_filename });
     }
   } catch (e) {
     app.innerHTML = `<div class="card"><p>PDFファイルの読み込みに失敗しました。config.jsonと同じ場所にPDFファイルが置かれているかご確認ください。</p><p class="note">${esc(e.message)}</p></div>`;
