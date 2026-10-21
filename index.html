@@ -137,7 +137,9 @@ function openPdf(src) {
     ...src,
     cMapUrl: PDFJS_BASE + 'cmaps/',
     cMapPacked: true,
-    standardFontDataUrl: PDFJS_BASE + 'standard_fonts/'
+    standardFontDataUrl: PDFJS_BASE + 'standard_fonts/',
+    // 4.2.67 未満の PDF.js は、細工した PDF でスクリプトを実行される（CVE-2024-4367）。この指定で防げる
+    isEvalSupported: false
   }).promise;
 }
 
